@@ -7,6 +7,7 @@ require('dotenv').config(); // Load environment variables from .env
 
 const app = express();
 const port = process.env.PORT || 5000;
+const API_URL = "https://my-pos-backend.onrender.com/api";
 
 // Database file path
 // The SQLite database will be created in your my-pos-backend directory
