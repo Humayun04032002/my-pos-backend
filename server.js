@@ -11,6 +11,9 @@ const port = process.env.PORT || 5000;
 // Database file path
 // The SQLite database will be created in your my-pos-backend directory
 const DB_FILE = './pos_system.db';
+app.get('/', (req, res) => {
+  res.send('Backend is running ✅');
+});
 
 // Connect to SQLite database
 // The database will be created if it doesn't exist
