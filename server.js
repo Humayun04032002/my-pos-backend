@@ -8,6 +8,9 @@ require('dotenv').config(); // Load environment variables from .env
 const app = express();
 const port = process.env.PORT || 5000;
 
+app.get('/', (req, res) => {
+  res.send('Backend is running ✅');
+});
 // Database file path
 // The SQLite database will be created in your my-pos-backend directory
 const DB_FILE = './pos_system.db';
