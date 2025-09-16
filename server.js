@@ -11,9 +11,6 @@ const port = process.env.PORT || 5000;
 // Database file path
 // The SQLite database will be created in your my-pos-backend directory
 const DB_FILE = './pos_system.db';
-app.get('/', (req, res) => {
-  res.send('Backend is running ✅');
-});
 
 // Connect to SQLite database
 // The database will be created if it doesn't exist
@@ -510,18 +507,44 @@ app.get('/api/floors', async (req, res) => {
 // POST /api/floors: Adds a new floor
 app.post('/api/floors', async (req, res) => {
     const { name } = req.body;
-    if (!name) {
-        return res.status(400).json({ message: 'Floor name is required.' });
-    }
+    if (!name) return res.status(400).json({ message: 'Floor name is required.' });
+
     try {
-        const result = await runDbAsync('INSERT INTO floors (name) VALUES (?)', [name]);
-        res.status(201).json({ message: 'Floor added successfully!', id: result.lastID, name });
+        const result = await runDbAsync(
+            'INSERT INTO floors (name) VALUES (?)',
+            [name.trim()]
+        );
+        res.status(201).json({
+            message: 'Floor added successfully!',
+            floor: { id: result.lastID, name: name.trim() }
+        });
     } catch (err) {
+        if (err.message.includes('SQLITE_CONSTRAINT: UNIQUE')) {
+            return res.status(409).json({
+                message: `Floor "${name}" already exists.`
+            });
+        }
         console.error('Error adding floor:', err.message);
-        res.status(500).json({ message: `Server Error: Could not add floor. Details: ${err.message}` });
+        res.status(500).json({
+            message: `Server Error: Could not add floor. Details: ${err.message}`
+        });
     }
 });
-
+// DELETE /api/floors/:id : Delete a floor and its tables
+app.delete('/api/floors/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        // Optional: delete all tables on that floor first if not ON DELETE CASCADE
+        const result = await runDbAsync('DELETE FROM floors WHERE id = ?', [id]);
+        if (result.changes === 0) {
+            return res.status(404).json({ message: 'Floor not found.' });
+        }
+        res.status(200).json({ message: 'Floor deleted successfully!', deletedFloorId: id });
+    } catch (err) {
+        console.error('Error deleting floor:', err.message);
+        res.status(500).json({ message: `Server Error: Could not delete floor. Details: ${err.message}` });
+    }
+});
 
 // GET /api/tables: Fetches all tables
 app.get('/api/tables', async (req, res) => {
